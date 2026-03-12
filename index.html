@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>A-Frame Project Work </title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #5ba3d0; }
+
+    /* Cinematic letterbox bars */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      left: 0; right: 0;
+      height: 36px;
+      background: rgba(0,0,0,0.78);
+      z-index: 100;
+      pointer-events: none;
+    }
+    body::before { top: 0; }
+    body::after  { bottom: 0; }
+
+    /* Vignette */
+    #vignette {
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at 50% 50%, transparent 50%, rgba(0,0,0,0.52) 100%);
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    /* CSS sky layer behind canvas */
+    #sky-layer {
+      position: fixed; inset: 0;
+      overflow: hidden;
+      z-index: 0;
+      background: linear-gradient(180deg, #3d88c8 0%, #6ab4e0 40%, #a8d8f0 72%, #cceef8 100%);
+    }
+    .cloud {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.80);
+      filter: blur(24px);
+      animation: drift linear infinite;
+    }
+    @keyframes drift {
+      0%   { transform: translateX(-220px); opacity: 0;   }
+      6%   { opacity: 1; }
+      94%  { opacity: 0.85; }
+      100% { transform: translateX(112vw);  opacity: 0;   }
+    }
+    a-scene { position: relative; z-index: 10; }
+  </style>
+</head>
+<body>
+
+<div id="sky-layer">
+  <div class="cloud" style="width:400px;height:115px;top:4% ;left:-5% ;animation-duration:72s ;animation-delay:0s;"></div>
+  <div class="cloud" style="width:260px;height:78px ;top:9% ;left:32% ;animation-duration:92s ;animation-delay:-26s;opacity:.70;"></div>
+  <div class="cloud" style="width:540px;height:135px;top:2% ;left:62% ;animation-duration:60s ;animation-delay:-12s;"></div>
+  <div class="cloud" style="width:190px;height:58px ;top:15%;left:12% ;animation-duration:108s;animation-delay:-48s;opacity:.55;"></div>
+  <div class="cloud" style="width:320px;height:95px ;top:7% ;left:50% ;animation-duration:80s ;animation-delay:-36s;opacity:.65;"></div>
+  <div class="cloud" style="width:460px;height:125px;top:3% ;left:76% ;animation-duration:66s ;animation-delay:-5s ;"></div>
+  <div class="cloud" style="width:680px;height:65px ;top:1% ;left:3%  ;animation-duration:145s;animation-delay:-78s;opacity:.22;filter:blur(38px);"></div>
+</div>
+
+<div id="vignette"></div>
+
+<!-- ================================================================
+     A-FRAME SCENE — Outdoor Garden Terrace
+     All geometry: a-box, a-cylinder, a-sphere, a-cone, a-torus, a-plane only.
+     Table top Y = 1.038. Items on table: Y = 1.038 + item_half_height.
+     Chair 1 front (Z = +1.42), Chair 2 back (Z = -1.42, rotated 180°).
+================================================================= -->
+<a-scene
+  shadow="type: pcfsoft; autoUpdate: true"
+  renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true; toneMapping: ACESFilmic; toneMappingExposure: 1.1"
+  vr-mode-ui="enabled: true"
+  fog="type: linear; color: #b8ddf5; near: 24; far: 62">
+
+  <!-- CAMERA — positioned front-right, angled toward table centre -->
+  <a-entity id="rig" position="0.6 1.90 4.10">
+    <a-camera
+    position="4 3 6"
+    rotation="-20 -35 0"
+    look-controls="pointerLockEnabled: false"
+    wasd-controls="acceleration: 14"
+    fov="64"
+    near="0.04"
+    far="80">
+</a-camera>
+  </a-entity>
+
+  <!-- SKY (transparent — CSS gradient handles it) -->
+  <a-sky color="#5aaedd" radius="65" opacity="0.0001"></a-sky>
+
+  <!-- Atmosphere haze dome -->
+  <a-sphere position="0 -10 0" radius="60" color="#a0d4f0"
+    roughness="1" metalness="0" opacity="0.16" side="back">
+  </a-sphere>
+
+  <!-- Sun disc + glow rings -->
+  <a-sphere position="20 26 -54" radius="3.2" color="#fffce8" roughness="0" metalness="0" opacity="0.95"></a-sphere>
+  <a-sphere position="20 26 -54" radius="5.5" color="#fff0b8" roughness="0" metalness="0" opacity="0.18"></a-sphere>
+  <a-sphere position="20 26 -54" radius="8.5" color="#ffe898" roughness="0" metalness="0" opacity="0.07"></a-sphere>
+
+  <!-- ═══ LIGHTING ═══════════════════════════════════════════ -->
+  <a-light type="ambient"     color="#d5e8ff" intensity="0.62"></a-light>
+  <a-light type="directional" color="#fff8e0" intensity="1.50"
+    position="20 26 -8"
+    cast-shadow="true"
+    shadow-camera-left="-10" shadow-camera-right="10"
+    shadow-camera-top="10"   shadow-camera-bottom="-10"
+    shadow-map-width="2048"  shadow-map-height="2048"
+    shadow-bias="-0.0005">
+  </a-light>
+  <!-- Sky bounce -->
+  <a-light type="point" color="#90c4ff" intensity="0.48" position="0 22 0" distance="60" decay="1"></a-light>
+  <!-- Table focal fill -->
+  <a-light type="point" color="#ffe8a0" intensity="1.00" position="0 3.2 0.3" distance="6" decay="2"></a-light>
+  <!-- Grass bounce -->
+  <a-light type="point" color="#80c850" intensity="0.18" position="0 0.5 2.0" distance="5" decay="2"></a-light>
+
+  <!-- ═══ GROUND ══════════════════════════════════════════════ -->
+  <!-- Grass lawn -->
+  <a-plane position="0 0 0" rotation="-90 0 0" width="90" height="90"
+    color="#4e8c2e" roughness="0.94" receive-shadow="true">
+  </a-plane>
+
+  <!-- Patio stone slab — 7.4 × 6.4, centred at origin -->
+  <a-plane position="0 0.014 0" rotation="-90 0 0" width="7.4" height="6.4"
+    color="#cfc3a8" roughness="0.78" metalness="0.02" receive-shadow="true">
+  </a-plane>
+  <!-- Flagstone grout — horizontal -->
+  <a-box position="0 0.018 -2.1" width="7.4" height="0.005" depth="0.030" color="#a89c82" roughness="0.84"></a-box>
+  <a-box position="0 0.018  0.0" width="7.4" height="0.005" depth="0.030" color="#a89c82" roughness="0.84"></a-box>
+  <a-box position="0 0.018  2.1" width="7.4" height="0.005" depth="0.030" color="#a89c82" roughness="0.84"></a-box>
+  <!-- Flagstone grout — vertical -->
+  <a-box position="-2.3 0.018 0" width="0.030" height="0.005" depth="6.4" color="#a89c82" roughness="0.84"></a-box>
+  <a-box position=" 0.0 0.018 0" width="0.030" height="0.005" depth="6.4" color="#a89c82" roughness="0.84"></a-box>
+  <a-box position=" 2.3 0.018 0" width="0.030" height="0.005" depth="6.4" color="#a89c82" roughness="0.84"></a-box>
+  <!-- Patio raised edge -->
+  <a-box position=" 0    0.032  3.22" width="7.44" height="0.062" depth="0.16" color="#c0b49a" roughness="0.72"></a-box>
+  <a-box position=" 0    0.032 -3.22" width="7.44" height="0.062" depth="0.16" color="#c0b49a" roughness="0.72"></a-box>
+  <a-box position="-3.74 0.032  0"    width="0.16" height="0.062" depth="6.64" color="#c0b49a" roughness="0.72"></a-box>
+  <a-box position=" 3.74 0.032  0"    width="0.16" height="0.062" depth="6.64" color="#c0b49a" roughness="0.72"></a-box>
+  <!-- Shadow under table -->
+  <a-plane position="0 0.019 0.1" rotation="-90 0 0" width="3.0" height="2.6"
+    color="#100800" roughness="0.99" opacity="0.16">
+  </a-plane>
+
+  <!-- ═══ PARASOL ══════════════════════════════════════════════
+       Pole base at Y=0, pole centre at Y=2.6 (height 5.2).
+       Canopy cone bottom at Y=4.72, top at Y=5.82.
+  ════════════════════════════════════════════════════════════ -->
+  <!-- Pole -->
+  <a-cylinder position="0 2.60 0" radius="0.030" height="5.20"
+    color="#d4d0c8" roughness="0.22" metalness="0.72" cast-shadow="true">
+  </a-cylinder>
+  <!-- Base plate -->
+  <a-cylinder position="0 0.065 0" radius="0.155" height="0.130"
+    color="#c8c4bc" roughness="0.32" metalness="0.68">
+  </a-cylinder>
+  <a-torus position="0 0.130 0" radius="0.150" radius-tubular="0.012"
+    color="#b8b4ac" roughness="0.28" metalness="0.72">
+  </a-torus>
+  <!-- Canopy — sage green -->
+  <a-cone position="0 5.27 0"
+    radius-bottom="3.10" radius-top="0.055" height="1.10"
+    color="#8aaa72" roughness="0.48" metalness="0.03" cast-shadow="true">
+  </a-cone>
+  <!-- Canopy underside (darker, back-face) -->
+  <a-cone position="0 5.26 0"
+    radius-bottom="3.02" radius-top="0.040" height="1.06"
+    color="#6a8a55" roughness="0.54" open-ended="true" side="back">
+  </a-cone>
+  <!-- 8 ribs -->
+  <a-cylinder position=" 1.50 4.88  0"    radius="0.013" height="3.10" rotation=" 0  0  73" color="#e4e0d4" roughness="0.38"></a-cylinder>
+  <a-cylinder position="-1.50 4.88  0"    radius="0.013" height="3.10" rotation=" 0  0 -73" color="#e4e0d4" roughness="0.38"></a-cylinder>
+  <a-cylinder position=" 0    4.88  1.50" radius="0.013" height="3.10" rotation="73  0   0" color="#e4e0d4" roughness="0.38"></a-cylinder>
+  <a-cylinder position=" 0    4.88 -1.50" radius="0.013" height="3.10" rotation="-73 0   0" color="#e4e0d4" roughness="0.38"></a-cylinder>
+  <a-cylinder position=" 1.06 4.88  1.06" radius="0.011" height="3.06" rotation="52  0  52" color="#d8d4c8" roughness="0.40"></a-cylinder>
+  <a-cylinder position="-1.06 4.88  1.06" radius="0.011" height="3.06" rotation="52  0 -52" color="#d8d4c8" roughness="0.40"></a-cylinder>
+  <a-cylinder position=" 1.06 4.88 -1.06" radius="0.011" height="3.06" rotation="-52 0  52" color="#d8d4c8" roughness="0.40"></a-cylinder>
+  <a-cylinder position="-1.06 4.88 -1.06" radius="0.011" height="3.06" rotation="-52 0 -52" color="#d8d4c8" roughness="0.40"></a-cylinder>
+  <!-- Valance (8 scallop flaps) -->
+  <a-cone position=" 2.98 4.72  0"    radius-bottom="0.26" radius-top="0.04" height="0.36" rotation=" 0  0  96" color="#7a9e62" roughness="0.50"></a-cone>
+  <a-cone position="-2.98 4.72  0"    radius-bottom="0.26" radius-top="0.04" height="0.36" rotation=" 0  0 -96" color="#7a9e62" roughness="0.50"></a-cone>
+  <a-cone position=" 0    4.72  2.98" radius-bottom="0.26" radius-top="0.04" height="0.36" rotation="96  0   0" color="#7a9e62" roughness="0.50"></a-cone>
+  <a-cone position=" 0    4.72 -2.98" radius-bottom="0.26" radius-top="0.04" height="0.36" rotation="-96 0   0" color="#7a9e62" roughness="0.50"></a-cone>
+  <a-cone position=" 2.11 4.72  2.11" radius-bottom="0.22" radius-top="0.04" height="0.32" rotation="68  0  68" color="#6e9258" roughness="0.50"></a-cone>
+  <a-cone position="-2.11 4.72  2.11" radius-bottom="0.22" radius-top="0.04" height="0.32" rotation="68  0 -68" color="#6e9258" roughness="0.50"></a-cone>
+  <a-cone position=" 2.11 4.72 -2.11" radius-bottom="0.22" radius-top="0.04" height="0.32" rotation="-68 0  68" color="#6e9258" roughness="0.50"></a-cone>
+  <a-cone position="-2.11 4.72 -2.11" radius-bottom="0.22" radius-top="0.04" height="0.32" rotation="-68 0 -68" color="#6e9258" roughness="0.50"></a-cone>
+  <!-- Centre hub & finial -->
+  <a-torus position="0 5.20 0" radius="0.065" radius-tubular="0.014" color="#b8c8a0" roughness="0.28" metalness="0.16"></a-torus>
+  <a-cylinder position="0 5.58 0" radius="0.016" height="0.25" color="#d0c870" roughness="0.14" metalness="0.76"></a-cylinder>
+  <a-sphere   position="0 5.72 0" radius="0.060" color="#e8d880" roughness="0.10" metalness="0.82"></a-sphere>
+
+  <!-- ═══ TABLE ════════════════════════════════════════════════
+       Round pedestal table. Seat height ~0.750.
+       Table top surface: Y=1.038 (top face).
+       Items rest on Y = 1.038 + half_their_height.
+  ════════════════════════════════════════════════════════════ -->
+  <!-- Tablecloth disc -->
+  <a-cylinder position="0 1.025 0" radius="0.730" height="0.018"
+    color="#f5f1e5" roughness="0.62" metalness="0.01" receive-shadow="true">
+  </a-cylinder>
+  <!-- Cloth drape torus -->
+  <a-torus position="0 0.975 0" radius="0.725" radius-tubular="0.038" color="#edeadc" roughness="0.68"></a-torus>
+  <a-torus position="0 0.945 0" radius="0.718" radius-tubular="0.026" color="#e8e4d6" roughness="0.70"></a-torus>
+  <!-- Table top -->
+  <a-cylinder position="0 1.010 0" radius="0.710" height="0.055"
+    color="#f8f5f0" roughness="0.22" metalness="0.08"
+    cast-shadow="true" receive-shadow="true">
+  </a-cylinder>
+  <!-- Rim torus -->
+  <a-torus position="0 1.010 0" radius="0.710" radius-tubular="0.028" color="#e8e4da" roughness="0.20" metalness="0.10"></a-torus>
+  <!-- Pedestal column (Y centre = 0.525, height 1.005 → top at 1.027, bottom at 0.022) -->
+  <a-cylinder position="0 0.525 0" radius="0.040" height="1.005"
+    color="#e8e4da" roughness="0.28" metalness="0.18">
+  </a-cylinder>
+  <!-- Column rings -->
+  <a-torus position="0 0.620 0" radius="0.052" radius-tubular="0.011" color="#d8d4ca" roughness="0.26" metalness="0.20"></a-torus>
+  <a-torus position="0 0.420 0" radius="0.052" radius-tubular="0.011" color="#d8d4ca" roughness="0.26" metalness="0.20"></a-torus>
+  <!-- Base cross feet -->
+  <a-box position="0 0.036 0" width="1.18" height="0.034" depth="0.040" color="#e0dcd2" roughness="0.34" metalness="0.16"></a-box>
+  <a-box position="0 0.036 0" width="0.040" height="0.034" depth="1.18" color="#e0dcd2" roughness="0.34" metalness="0.16"></a-box>
+  <!-- Foot arch scrolls -->
+  <a-torus position=" 0.40 0.058  0"    radius="0.115" radius-tubular="0.013" arc="180" rotation="0 0  90" color="#d8d4ca" roughness="0.28" metalness="0.18"></a-torus>
+  <a-torus position="-0.40 0.058  0"    radius="0.115" radius-tubular="0.013" arc="180" rotation="0 0 -90" color="#d8d4ca" roughness="0.28" metalness="0.18"></a-torus>
+  <a-torus position=" 0    0.058  0.40" radius="0.115" radius-tubular="0.013" arc="180" rotation="90 0 0"  color="#d8d4ca" roughness="0.28" metalness="0.18"></a-torus>
+  <a-torus position=" 0    0.058 -0.40" radius="0.115" radius-tubular="0.013" arc="180" rotation="-90 0 0" color="#d8d4ca" roughness="0.28" metalness="0.18"></a-torus>
+  <!-- Foot tip caps -->
+  <a-sphere position=" 0.56 0.040  0"    radius="0.028" color="#ccc8be" roughness="0.38"></a-sphere>
+  <a-sphere position="-0.56 0.040  0"    radius="0.028" color="#ccc8be" roughness="0.38"></a-sphere>
+  <a-sphere position=" 0    0.040  0.56" radius="0.028" color="#ccc8be" roughness="0.38"></a-sphere>
+  <a-sphere position=" 0    0.040 -0.56" radius="0.028" color="#ccc8be" roughness="0.38"></a-sphere>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       WROUGHT-IRON GARDEN CHAIRS  — deep hunter green
+       Colour palette: #1a3d1a base · #223d22 highlight · #142a14 shadow
+       Design: every joint has a sphere cap so nothing looks floating.
+       Legs top/bottom are exact. Back uprights begin at seat-frame ring.
+       Cushion Chair1 = terracotta · Chair2 = sage green
+  ═══════════════════════════════════════════════════════════ -->
+
+  <!-- ================= CHAIRS ================= -->
+
+<!-- ───────── CHAIR 1 (Front) ───────── -->
+<a-entity position="0 0 1.42">
+
+  <!-- LEGS -->
+  <a-cylinder position="-0.25 0.36 -0.20" radius="0.025" height="0.72" color="#1a3d1a"></a-cylinder>
+  <a-cylinder position="0.25 0.36 -0.20" radius="0.025" height="0.72" color="#1a3d1a"></a-cylinder>
+  <a-cylinder position="-0.25 0.36 0.22" radius="0.025" height="0.72" color="#1a3d1a"></a-cylinder>
+  <a-cylinder position="0.25 0.36 0.22" radius="0.025" height="0.72" color="#1a3d1a"></a-cylinder>
+
+  <!-- LEG CONNECTORS -->
+  <a-cylinder position="0 0.30 -0.20" rotation="0 0 90" radius="0.015" height="0.50" color="#223d22"></a-cylinder>
+  <a-cylinder position="0 0.30 0.22" rotation="0 0 90" radius="0.015" height="0.50" color="#223d22"></a-cylinder>
+  <a-cylinder position="-0.25 0.30 0.01" rotation="90 0 0" radius="0.015" height="0.42" color="#223d22"></a-cylinder>
+  <a-cylinder position="0.25 0.30 0.01" rotation="90 0 0" radius="0.015" height="0.42" color="#223d22"></a-cylinder>
+
+  <!-- SEAT BASE -->
+  <a-cylinder position="0 0.74 0" radius="0.30" height="0.05" color="#1e421e"></a-cylinder>
+
+  <!-- CUSHION -->
+  <a-cylinder position="0 0.80 0" radius="0.28" height="0.07" color="#c8694a"></a-cylinder>
+
+  <!-- BACK SUPPORT POSTS -->
+  <a-cylinder position="-0.25 1.20 0.22" radius="0.025" height="0.95" color="#1a3d1a"></a-cylinder>
+  <a-cylinder position="0.25 1.20 0.22" radius="0.025" height="0.95" color="#1a3d1a"></a-cylinder>
+
+  <!-- BACK REST BARS -->
+  <a-cylinder position="0 0.95 0.22" rotation="0 0 90" radius="0.015" height="0.50" color="#223d22"></a-cylinder>
+  <a-cylinder position="0 1.20 0.22" rotation="0 0 90" radius="0.015" height="0.50" color="#223d22"></a-cylinder>
+  <a-cylinder position="0 1.45 0.22" rotation="0 0 90" radius="0.015" height="0.50" color="#223d22"></a-cylinder>
+
+</a-entity>
+
+
+
+<!-- ───────── CHAIR 2 (Back facing table) ───────── -->
+<a-entity position="0 0 -1.42" rotation="0 180 0">
+
+  <!-- LEGS -->
+  <a-cylinder position="-0.25 0.36 -0.20" radius="0.025" height="0.72" color="#1a3d1a"></a-cylinder>
+  <a-cylinder position="0.25 0.36 -0.20" radius="0.025" height="0.72" color="#1a3d1a"></a-cylinder>
+  <a-cylinder position="-0.25 0.36 0.22" radius="0.025" height="0.72" color="#1a3d1a"></a-cylinder>
+  <a-cylinder position="0.25 0.36 0.22" radius="0.025" height="0.72" color="#1a3d1a"></a-cylinder>
+
+  <!-- CONNECTORS -->
+  <a-cylinder position="0 0.30 -0.20" rotation="0 0 90" radius="0.015" height="0.50" color="#223d22"></a-cylinder>
+  <a-cylinder position="0 0.30 0.22" rotation="0 0 90" radius="0.015" height="0.50" color="#223d22"></a-cylinder>
+  <a-cylinder position="-0.25 0.30 0.01" rotation="90 0 0" radius="0.015" height="0.42" color="#223d22"></a-cylinder>
+  <a-cylinder position="0.25 0.30 0.01" rotation="90 0 0" radius="0.015" height="0.42" color="#223d22"></a-cylinder>
+
+  <!-- SEAT BASE -->
+  <a-cylinder position="0 0.74 0" radius="0.30" height="0.05" color="#1e421e"></a-cylinder>
+
+  <!-- CUSHION -->
+  <a-cylinder position="0 0.80 0" radius="0.28" height="0.07" color="#7a9e6a"></a-cylinder>
+
+  <!-- BACK POSTS -->
+  <a-cylinder position="-0.25 1.20 0.22" radius="0.025" height="0.95" color="#1a3d1a"></a-cylinder>
+  <a-cylinder position="0.25 1.20 0.22" radius="0.025" height="0.95" color="#1a3d1a"></a-cylinder>
+
+  <!-- BACK BARS -->
+  <a-cylinder position="0 0.95 0.22" rotation="0 0 90" radius="0.015" height="0.50" color="#223d22"></a-cylinder>
+  <a-cylinder position="0 1.20 0.22" rotation="0 0 90" radius="0.015" height="0.50" color="#223d22"></a-cylinder>
+  <a-cylinder position="0 1.45 0.22" rotation="0 0 90" radius="0.015" height="0.50" color="#223d22"></a-cylinder>
+
+</a-entity>
+  <!-- ═══ TABLE ITEMS ══════════════════════════════════════════
+       Table top face at Y = 1.038.
+       All items: base Y = 1.038, then position Y = 1.038 + halfHeight.
+  ════════════════════════════════════════════════════════════ -->
+
+  <!-- ── MILO TIN  (left-centre, height 0.460, so centre Y = 1.038+0.230 = 1.268) ── -->
+  <a-cylinder position="-0.285 1.268 -0.050"
+    radius="0.092" height="0.460"
+    color="#1a5c24" roughness="0.24" metalness="0.46">
+  </a-cylinder>
+  <!-- Label ring -->
+  <a-cylinder position="-0.285 1.278 -0.050" radius="0.0935" height="0.285" color="#268038" roughness="0.18" metalness="0.18"></a-cylinder>
+  <!-- White stripe -->
+  <a-cylinder position="-0.285 1.282 -0.050" radius="0.0942" height="0.055" color="#f5f5f2" roughness="0.22" metalness="0.05"></a-cylinder>
+  <!-- Bottom seam (Y = 1.038 + 0.012 = 1.050) -->
+  <a-cylinder position="-0.285 1.050 -0.050" radius="0.0928" height="0.024" color="#124e1e" roughness="0.36" metalness="0.55"></a-cylinder>
+  <!-- Lid (Y = 1.038 + 0.460 + 0.020 = 1.518) -->
+  <a-cylinder position="-0.285 1.518 -0.050" radius="0.0950" height="0.038" color="#d4aa2a" roughness="0.12" metalness="0.74"></a-cylinder>
+  <a-torus     position="-0.285 1.518 -0.050" radius="0.0930" radius-tubular="0.0060" color="#b89018" roughness="0.14" metalness="0.80"></a-torus>
+  <!-- Lid knob -->
+  <a-cylinder position="-0.285 1.540 -0.050" radius="0.0280" height="0.020" color="#c4a022" roughness="0.10" metalness="0.84"></a-cylinder>
+
+  <!-- ── MILK TIN  (right-centre, height 0.390, centre Y = 1.038+0.195 = 1.233) ── -->
+  <a-cylinder position="0.310 1.233 0.060"
+    radius="0.080" height="0.390"
+    color="#eeebe3" roughness="0.18" metalness="0.48">
+  </a-cylinder>
+  <!-- Blue label band -->
+  <a-cylinder position="0.310 1.236 0.060" radius="0.0814" height="0.225" color="#2460b0" roughness="0.16" metalness="0.12"></a-cylinder>
+  <!-- White stripe -->
+  <a-cylinder position="0.310 1.236 0.060" radius="0.0820" height="0.050" color="#f9f9f7" roughness="0.22"></a-cylinder>
+  <!-- Bottom seam (Y = 1.038 + 0.010 = 1.048) -->
+  <a-cylinder position="0.310 1.048 0.060" radius="0.0808" height="0.018" color="#c0bcb4" roughness="0.26" metalness="0.56"></a-cylinder>
+  <!-- Lid (Y = 1.038 + 0.390 + 0.017 = 1.445) -->
+  <a-cylinder position="0.310 1.445 0.060" radius="0.0830" height="0.032" color="#d2cec6" roughness="0.14" metalness="0.72"></a-cylinder>
+  <a-torus     position="0.310 1.445 0.060" radius="0.0812" radius-tubular="0.0055" color="#b0aca4" roughness="0.16" metalness="0.74"></a-torus>
+  <a-cylinder  position="0.310 1.463 0.060" radius="0.0222" height="0.017" color="#bab6ae" roughness="0.12" metalness="0.78"></a-cylinder>
+
+  <!-- ── SUGAR BOWL (between tins, height ≈0.140, centre Y=1.038+0.070=1.108) ── -->
+  <a-sphere position="0.025 1.108 0.025" radius="0.065" scale="1 0.72 1" color="#f4f0de" roughness="0.34" metalness="0.06"></a-sphere>
+  <!-- Dome lid (rests on top ~Y=1.108+0.065*0.72=1.155) -->
+  <a-sphere position="0.025 1.150 0.025" radius="0.060" scale="1 0.44 1" color="#eee8d2" roughness="0.32" metalness="0.07"></a-sphere>
+  <!-- Lid knob -->
+  <a-sphere position="0.025 1.178 0.025" radius="0.011" color="#c8a850" roughness="0.16" metalness="0.64"></a-sphere>
+  <!-- Bowl foot ring -->
+  <a-torus position="0.025 1.040 0.025" radius="0.048" radius-tubular="0.007" color="#dcd8c4" roughness="0.40"></a-torus>
+
+  <!-- ── FRUIT BOWL (back-centre, bowl base at Y=1.038, fruit piled above) ── -->
+  <a-entity position="-0.040 1.038 -0.200">
+    <!-- Bowl outer (squashed sphere, half-height ≈0.088) -->
+    <a-sphere position="0 0.060 0" radius="0.150" scale="1 0.55 1" color="#c2a06e" roughness="0.44" metalness="0.12"></a-sphere>
+    <!-- Bowl inner concave -->
+    <a-sphere position="0 0.086 0" radius="0.137" scale="1 0.50 1" color="#aa8858" roughness="0.36"></a-sphere>
+    <!-- Rim torus -->
+    <a-torus position="0 0.096 0" radius="0.146" radius-tubular="0.011" color="#b89060" roughness="0.42"></a-torus>
+    <!-- Foot ring -->
+    <a-torus position="0 0.011 0" radius="0.076" radius-tubular="0.012" color="#aa8858" roughness="0.44"></a-torus>
+    <!-- Apple -->
+    <a-sphere position="-0.055 0.185 0.025" radius="0.058" color="#cc2020" roughness="0.33" metalness="0.05"></a-sphere>
+    <a-sphere position="-0.038 0.208 0.042" radius="0.014" color="#ff7070" roughness="0.03" opacity="0.45"></a-sphere>
+    <a-cylinder position="-0.055 0.247 0.025" radius="0.0045" height="0.024" color="#5a3010" roughness="0.70"></a-cylinder>
+    <a-box position="-0.042 0.258 0.030" width="0.024" height="0.003" depth="0.013" rotation="0 -20 18" color="#3a7820" roughness="0.56"></a-box>
+    <!-- Orange -->
+    <a-sphere position="0.065 0.178 -0.020" radius="0.050" color="#e06c1e" roughness="0.48" metalness="0.02"></a-sphere>
+    <a-sphere position="0.082 0.173 -0.026" radius="0.009" color="#c85a12" roughness="0.62"></a-sphere>
+    <!-- Banana -->
+    <a-cylinder position="0.008 0.178 0.065" radius="0.020" height="0.088" rotation="16 30 78" color="#e8d02a" roughness="0.46"></a-cylinder>
+    <!-- Grapes -->
+    <a-sphere position="-0.038 0.158 -0.062" radius="0.024" color="#652298" roughness="0.38" metalness="0.05"></a-sphere>
+    <a-sphere position="-0.015 0.151 -0.072" radius="0.020" color="#541090" roughness="0.38"></a-sphere>
+    <a-sphere position="-0.055 0.148 -0.074" radius="0.018" color="#7420a0" roughness="0.38"></a-sphere>
+    <a-cylinder position="-0.036 0.176 -0.068" radius="0.003" height="0.022" rotation="10 0 5" color="#5a3820" roughness="0.68"></a-cylinder>
+  </a-entity>
+
+  <!-- ── SMALL PLATE (centre-front, base at Y=1.038) ── -->
+  <a-entity position="0.055 1.038 0.180">
+    <a-cylinder position="0 0.007 0" radius="0.150" height="0.013" color="#f9f6f0" roughness="0.24" metalness="0.05"></a-cylinder>
+    <a-torus position="0 0.013 0" radius="0.147" radius-tubular="0.007" color="#eae4d6" roughness="0.24"></a-torus>
+    <a-torus position="0 0.014 0" radius="0.120" radius-tubular="0.003" color="#ddd6c6" roughness="0.26"></a-torus>
+    <!-- Biscuit 1 -->
+    <a-cylinder position=" 0.038 0.021 -0.015" radius="0.043" height="0.016" rotation="0 14 0" color="#c89348" roughness="0.76"></a-cylinder>
+    <!-- Biscuit 2 -->
+    <a-cylinder position="-0.046 0.020  0.022" radius="0.040" height="0.014" rotation="0 -7 0" color="#d49a50" roughness="0.76"></a-cylinder>
+    <!-- Orange slice -->
+    <a-cone position=" 0.010 0.019 0.060" radius-bottom="0.036" radius-top="0.005" height="0.013" rotation="88 18 0" color="#e8a030" roughness="0.52"></a-cone>
+  </a-entity>
+
+  <!-- ── CUP 1 — left side, near front chair ──
+       Base of saucer at Y=1.038.
+       Cup sits centred around X=-0.42, Z=+0.30 (toward front chair).
+  ── -->
+  <a-entity position="-0.420 1.038 0.295" rotation="0 -16 0">
+    <!-- Saucer (base at Y=0 local = 1.038 world) -->
+    <a-cylinder position="0 0.006 0" radius="0.090" height="0.011" color="#f4f0e6" roughness="0.24" metalness="0.05"></a-cylinder>
+    <a-torus position="0 0.011 0" radius="0.087" radius-tubular="0.005" color="#e4dece" roughness="0.26"></a-torus>
+    <a-torus position="0 0.012 0" radius="0.050" radius-tubular="0.003" color="#d8c8b8" roughness="0.28"></a-torus>
+    <!-- Cup body (base at local Y=0.011, height 0.130, centre at Y=0.076) -->
+    <a-cylinder position="0 0.076 0" radius-top="0.053" radius-bottom="0.042" height="0.130"
+      color="#f8f3e8" roughness="0.20" metalness="0.11">
+    </a-cylinder>
+    <!-- Rim torus -->
+    <a-torus position="0 0.141 0" radius="0.053" radius-tubular="0.006" color="#ecdfc8" roughness="0.18"></a-torus>
+    <!-- Base ring -->
+    <a-cylinder position="0 0.017 0" radius="0.046" height="0.013" color="#ecdfc8" roughness="0.24"></a-cylinder>
+    <!-- Handle -->
+    <a-torus position="0.065 0.076 0" radius="0.027" radius-tubular="0.008" rotation="90 0 0" color="#ecdfc8" roughness="0.24"></a-torus>
+    <!-- Drink surface at local Y=0.111 -->
+    <a-cylinder position="0 0.111 0" radius="0.047" height="0.010" color="#b89452" roughness="0.04" metalness="0.12"></a-cylinder>
+    <a-torus position="0 0.117 0" radius="0.021" radius-tubular="0.004" color="#d4aa68" roughness="0.06"></a-torus>
+  </a-entity>
+
+  <!-- ── CUP 2 — right side, near back chair ──
+       X=+0.42, Z=-0.30 (toward back chair).
+  ── -->
+  <a-entity position="0.420 1.038 -0.295" rotation="0 20 0">
+    <a-cylinder position="0 0.006 0" radius="0.090" height="0.011" color="#f6f2e8" roughness="0.24" metalness="0.05"></a-cylinder>
+    <a-torus position="0 0.011 0" radius="0.087" radius-tubular="0.005" color="#e6e0d0" roughness="0.26"></a-torus>
+    <a-torus position="0 0.012 0" radius="0.050" radius-tubular="0.003" color="#dcccbc" roughness="0.28"></a-torus>
+    <a-cylinder position="0 0.076 0" radius-top="0.053" radius-bottom="0.042" height="0.130"
+      color="#fdf8ee" roughness="0.20" metalness="0.11">
+    </a-cylinder>
+    <a-torus position="0 0.141 0" radius="0.053" radius-tubular="0.006" color="#eee2cc" roughness="0.18"></a-torus>
+    <a-cylinder position="0 0.017 0" radius="0.046" height="0.013" color="#eee2cc" roughness="0.24"></a-cylinder>
+    <!-- Handle on left side -->
+    <a-torus position="-0.065 0.076 0" radius="0.027" radius-tubular="0.008" rotation="90 0 0" color="#eee2cc" roughness="0.24"></a-torus>
+    <a-cylinder position="0 0.111 0" radius="0.047" height="0.010" color="#a88848" roughness="0.04" metalness="0.12"></a-cylinder>
+    <a-torus position="0 0.117 0" radius="0.021" radius-tubular="0.004" color="#c8a058" roughness="0.06"></a-torus>
+  </a-entity>
+
+  <!-- ── SPOON — beside Cup 1, angled 30° ── -->
+  <a-entity position="-0.295 1.038 0.348" rotation="0 30 0">
+    <!-- Shaft: centre at local Y=0 means it floats; raise it to sit on table -->
+    <a-cylinder position="0 0.006 0" radius="0.0044" height="0.148" color="#cccac0" roughness="0.07" metalness="0.88"></a-cylinder>
+    <!-- Bowl of spoon at bottom -->
+    <a-sphere position="0 -0.068 0" radius="0.016" scale="1 0.44 1.05" color="#cccac0" roughness="0.07" metalness="0.88"></a-sphere>
+    <!-- Handle end cap -->
+    <a-sphere position="0 0.080 0" radius="0.0058" color="#c0beb4" roughness="0.09" metalness="0.84"></a-sphere>
+  </a-entity>
+
+  <!-- ═══ GARDEN ENVIRONMENT ════════════════════════════════ -->
+
+  <!-- ── LARGE OAK — back left ── -->
+  <a-entity position="-7.5 0 -9.5">
+    <a-sphere position="0 0.10 0" radius="0.85" scale="2.2 0.16 2.0" color="#4a8228" roughness="0.92"></a-sphere>
+    <a-cylinder position="0 2.50 0" radius="0.325" height="5.00" color="#5c4018" roughness="0.82" cast-shadow="true"></a-cylinder>
+    <a-torus position="0 1.20 0" radius="0.330" radius-tubular="0.026" color="#4e3412" roughness="0.84"></a-torus>
+    <a-torus position="0 2.60 0" radius="0.318" radius-tubular="0.022" color="#4e3412" roughness="0.84"></a-torus>
+    <a-torus position="0 3.80 0" radius="0.305" radius-tubular="0.018" color="#4e3412" roughness="0.84"></a-torus>
+    <a-box position="-0.40 0.16 0" width="0.13" height="0.26" depth="0.95" rotation="0 0  13" color="#4e3412" roughness="0.80"></a-box>
+    <a-box position=" 0.40 0.16 0" width="0.13" height="0.26" depth="0.95" rotation="0 0 -13" color="#4e3412" roughness="0.80"></a-box>
+    <a-cylinder position="-1.0 5.5  0.4" radius="0.115" height="2.70" rotation="22 20 -42" color="#52381a" roughness="0.78"></a-cylinder>
+    <a-cylinder position=" 1.2 5.3 -0.3" radius="0.095" height="2.40" rotation="18 -30 38" color="#52381a" roughness="0.78"></a-cylinder>
+    <a-sphere position=" 0.0 7.30  0.2"  radius="2.35" scale="1.0 0.86 1.0" color="#2a6418" roughness="0.60" cast-shadow="true"></a-sphere>
+    <a-sphere position="-1.2 7.70  0.5"  radius="1.75" scale="1.1 0.80 1.0" color="#327e1e" roughness="0.60"></a-sphere>
+    <a-sphere position=" 1.4 7.50 -0.4"  radius="1.85" scale="1.0 0.82 1.1" color="#2c7018" roughness="0.60"></a-sphere>
+    <a-sphere position="-0.3 8.20  0.0"  radius="1.55" scale="1.1 0.74 1.0" color="#3a8c1e" roughness="0.58"></a-sphere>
+    <a-sphere position=" 0.8 8.00  0.8"  radius="1.45" scale="1.0 0.78 1.2" color="#348220" roughness="0.58"></a-sphere>
+    <a-sphere position=" 0.2 8.70  0.3"  radius="1.05" scale="1.0 0.70 1.0" color="#4ea02a" roughness="0.56" opacity="0.82"></a-sphere>
+  </a-entity>
+
+  <!-- ── MEDIUM TREE — back right ── -->
+  <a-entity position="7.0 0 -8.0">
+    <a-sphere position="0 0.09 0" radius="0.68" scale="2.0 0.15 1.8" color="#4a8228" roughness="0.92"></a-sphere>
+    <a-cylinder position="0 2.0 0" radius="0.230" height="4.0" color="#60421a" roughness="0.78" cast-shadow="true"></a-cylinder>
+    <a-torus position="0 1.0 0" radius="0.234" radius-tubular="0.020" color="#523618" roughness="0.82"></a-torus>
+    <a-torus position="0 2.2 0" radius="0.226" radius-tubular="0.017" color="#523618" roughness="0.82"></a-torus>
+    <a-cylinder position="-0.8 4.4  0.4" radius="0.090" height="2.10" rotation="20 18 -38" color="#543a18" roughness="0.78"></a-cylinder>
+    <a-cylinder position=" 0.9 4.2 -0.3" radius="0.082" height="1.95" rotation="16 -28 34" color="#543a18" roughness="0.78"></a-cylinder>
+    <a-sphere position=" 0.0 5.80  0.1"  radius="1.95" scale="1.0 0.88 1.0" color="#2e7820" roughness="0.60" cast-shadow="true"></a-sphere>
+    <a-sphere position="-0.9 6.10  0.4"  radius="1.45" scale="1.1 0.82 1.0" color="#388c24" roughness="0.60"></a-sphere>
+    <a-sphere position=" 1.1 5.90 -0.4"  radius="1.55" scale="1.0 0.84 1.1" color="#2a6e1c" roughness="0.60"></a-sphere>
+    <a-sphere position=" 0.3 6.80  0.0"  radius="1.25" scale="1.0 0.76 1.0" color="#3e9020" roughness="0.58"></a-sphere>
+  </a-entity>
+
+  <!-- ── SLIM ORNAMENTAL TREE — right close ── -->
+  <a-entity position="5.2 0 -1.5">
+    <a-cylinder position="0 1.80 0" radius="0.080" height="3.60" rotation="0 0 2" color="#7a5c28" roughness="0.74"></a-cylinder>
+    <a-sphere position="0 3.80 0" radius="0.82" scale="1 0.95 1" color="#2e8820" roughness="0.58" cast-shadow="true"></a-sphere>
+    <a-sphere position="0 4.85 0" radius="0.68" scale="1 0.90 1" color="#389028" roughness="0.58"></a-sphere>
+    <a-sphere position="0 5.70 0" radius="0.52" scale="1 0.88 1" color="#429822" roughness="0.56"></a-sphere>
+    <a-torus position="0 0.90 0" radius="0.083" radius-tubular="0.010" color="#6a5020" roughness="0.72"></a-torus>
+    <a-torus position="0 2.00 0" radius="0.078" radius-tubular="0.009" color="#6a5020" roughness="0.72"></a-torus>
+    <a-torus position="0 3.00 0" radius="0.073" radius-tubular="0.008" color="#6a5020" roughness="0.72"></a-torus>
+  </a-entity>
+
+  <!-- ── SMALL ACCENT TREE — left near ── -->
+  <a-entity position="-4.6 0 0.5">
+    <a-cylinder position="0 1.40 0" radius="0.062" height="2.80" color="#7a5c28" roughness="0.72"></a-cylinder>
+    <a-sphere position="0 3.0 0" radius="0.88" scale="1.1 0.85 1.0" color="#2c7a18" roughness="0.60"></a-sphere>
+    <a-sphere position="0 3.9 0" radius="0.62" scale="1.0 0.82 1.1" color="#368e1e" roughness="0.60"></a-sphere>
+    <a-sphere position="0 4.6 0" radius="0.44" scale="1.1 0.80 1.0" color="#3e9622" roughness="0.58"></a-sphere>
+  </a-entity>
+
+  <!-- ── FLOWER BED LEFT ── -->
+  <a-entity position="-4.5 0 -1.2">
+    <a-sphere position="0 0.060 0" radius="1.25" scale="2.2 0.11 1.4" color="#381e08" roughness="0.95"></a-sphere>
+    <!-- Border stones -->
+    <a-sphere position=" 1.18 0.048  0"    radius="0.125" scale="1 0.40 0.84" color="#9e9488" roughness="0.78"></a-sphere>
+    <a-sphere position="-1.18 0.048  0"    radius="0.120" scale="1 0.40 0.84" color="#9e9488" roughness="0.78"></a-sphere>
+    <a-sphere position=" 0    0.048  0.68" radius="0.115" scale="0.9 0.40 0.80" color="#948e82" roughness="0.78"></a-sphere>
+    <a-sphere position=" 0    0.048 -0.68" radius="0.112" scale="0.9 0.42 0.80" color="#948e82" roughness="0.78"></a-sphere>
+    <a-sphere position=" 0.83 0.046  0.50" radius="0.098" scale="1 0.38 0.76" color="#8e8880" roughness="0.78"></a-sphere>
+    <a-sphere position="-0.83 0.046 -0.50" radius="0.095" scale="1 0.38 0.76" color="#8e8880" roughness="0.78"></a-sphere>
+    <!-- Foliage base -->
+    <a-sphere position=" 0.10 0.140  0.10" radius="0.30" scale="1.5 0.55 1.3" color="#3a8220" roughness="0.64"></a-sphere>
+    <a-sphere position="-0.28 0.128 -0.10" radius="0.24" scale="1.2 0.52 1.1" color="#30781a" roughness="0.64"></a-sphere>
+    <!-- Red roses -->
+    <a-cylinder position=" 0.22 0.370  0.12" radius="0.0072" height="0.330" color="#508832" roughness="0.58"></a-cylinder>
+    <a-sphere   position=" 0.22 0.545  0.12" radius="0.068"  color="#c81e1e" roughness="0.40"></a-sphere>
+    <a-sphere   position=" 0.22 0.558  0.12" radius="0.035"  color="#e83030" roughness="0.30" opacity="0.56"></a-sphere>
+    <a-cylinder position="-0.16 0.335 -0.10" radius="0.0065" height="0.288" color="#508832" roughness="0.58"></a-cylinder>
+    <a-sphere   position="-0.16 0.482 -0.10" radius="0.060"  color="#d02222" roughness="0.40"></a-sphere>
+    <!-- Sunflowers -->
+    <a-cylinder position=" 0.48 0.436 -0.08" radius="0.0082" height="0.440" color="#5a9030" roughness="0.56"></a-cylinder>
+    <a-sphere   position=" 0.48 0.660 -0.08" radius="0.065"  color="#f8c818" roughness="0.38"></a-sphere>
+    <a-cylinder position=" 0.48 0.678 -0.08" radius="0.028"  height="0.012" color="#3c2208" roughness="0.56"></a-cylinder>
+    <!-- Pink flowers -->
+    <a-cylinder position="-0.42 0.368  0.22" radius="0.0068" height="0.312" color="#508030" roughness="0.56"></a-cylinder>
+    <a-sphere   position="-0.42 0.528  0.22" radius="0.074"  color="#e04aa8" roughness="0.42"></a-sphere>
+    <a-sphere   position="-0.42 0.542  0.22" radius="0.038"  color="#f060b8" roughness="0.32" opacity="0.54"></a-sphere>
+    <!-- Daisies -->
+    <a-cylinder position=" 0.06 0.305 -0.23" radius="0.0060" height="0.240" color="#489828" roughness="0.58"></a-cylinder>
+    <a-sphere   position=" 0.06 0.428 -0.23" radius="0.048"  color="#f8f6f0" roughness="0.38"></a-sphere>
+    <a-cylinder position=" 0.06 0.442 -0.23" radius="0.015"  height="0.013" color="#f0c820" roughness="0.30"></a-cylinder>
+    <!-- Lavender -->
+    <a-cylinder position=" 0.66 0.348  0.14" radius="0.0058" height="0.285" color="#5a9030" roughness="0.56"></a-cylinder>
+    <a-sphere   position=" 0.66 0.494  0.14" radius="0.042"  color="#8030c8" roughness="0.42"></a-sphere>
+    <a-sphere   position=" 0.66 0.520  0.14" radius="0.026"  color="#9838d8" roughness="0.42"></a-sphere>
+    <a-sphere   position=" 0.66 0.542  0.14" radius="0.018"  color="#a040e0" roughness="0.42"></a-sphere>
+  </a-entity>
+
+  <!-- ── FLOWER BED RIGHT ── -->
+  <a-entity position="4.8 0 -0.8">
+    <a-sphere position="0 0.055 0" radius="1.05" scale="2.0 0.11 1.3" color="#381e08" roughness="0.95"></a-sphere>
+    <a-sphere position=" 1.03 0.046  0"    radius="0.115" scale="1 0.40 0.84" color="#9e9488" roughness="0.78"></a-sphere>
+    <a-sphere position="-1.03 0.046  0"    radius="0.110" scale="1 0.40 0.84" color="#9e9488" roughness="0.78"></a-sphere>
+    <a-sphere position=" 0    0.046  0.58" radius="0.106" scale="0.9 0.40 0.80" color="#948e82" roughness="0.78"></a-sphere>
+    <a-sphere position=" 0    0.046 -0.58" radius="0.103" scale="0.9 0.42 0.80" color="#948e82" roughness="0.78"></a-sphere>
+    <a-sphere position=" 0.08 0.136  0.10" radius="0.27" scale="1.4 0.54 1.2" color="#388020" roughness="0.64"></a-sphere>
+    <!-- Purple lavender -->
+    <a-cylinder position=" 0.24 0.364  0.10" radius="0.0070" height="0.315" color="#509030" roughness="0.56"></a-cylinder>
+    <a-sphere   position=" 0.24 0.522  0.10" radius="0.055"  color="#8832c8" roughness="0.40"></a-sphere>
+    <a-sphere   position=" 0.24 0.544  0.10" radius="0.034"  color="#9a3ed8" roughness="0.40" opacity="0.62"></a-sphere>
+    <a-cylinder position="-0.20 0.332 -0.08" radius="0.0062" height="0.274" color="#509030" roughness="0.56"></a-cylinder>
+    <a-sphere   position="-0.20 0.472 -0.08" radius="0.050"  color="#9040d0" roughness="0.40"></a-sphere>
+    <!-- Marigolds -->
+    <a-cylinder position=" 0.50 0.388 -0.06" radius="0.0076" height="0.344" color="#5a9030" roughness="0.56"></a-cylinder>
+    <a-sphere   position=" 0.50 0.562 -0.06" radius="0.062"  color="#e87018" roughness="0.38"></a-sphere>
+    <a-cylinder position=" 0.50 0.580 -0.06" radius="0.023"  height="0.012" color="#c05010" roughness="0.50"></a-cylinder>
+    <!-- Pink roses -->
+    <a-cylinder position="-0.40 0.348  0.18" radius="0.0068" height="0.292" color="#508032" roughness="0.56"></a-cylinder>
+    <a-sphere   position="-0.40 0.496  0.18" radius="0.056"  color="#e058a0" roughness="0.40"></a-sphere>
+    <a-sphere   position="-0.40 0.508  0.18" radius="0.028"  color="#f068b0" roughness="0.30" opacity="0.54"></a-sphere>
+    <!-- White flowers -->
+    <a-cylinder position=" 0.08 0.284 -0.21" radius="0.0060" height="0.220" color="#489828" roughness="0.58"></a-cylinder>
+    <a-sphere   position=" 0.08 0.397 -0.21" radius="0.044"  color="#f8f6f0" roughness="0.36"></a-sphere>
+    <a-cylinder position=" 0.08 0.411 -0.21" radius="0.0148" height="0.012" color="#f0c820" roughness="0.28"></a-cylinder>
+    <!-- Red poppy -->
+    <a-cylinder position="-0.62 0.402  0.04" radius="0.0066" height="0.372" color="#5a9030" roughness="0.56"></a-cylinder>
+    <a-sphere   position="-0.62 0.590  0.04" radius="0.056"  color="#d82020" roughness="0.38"></a-sphere>
+    <a-cylinder position="-0.62 0.605  0.04" radius="0.019"  height="0.013" color="#1c1008" roughness="0.56"></a-cylinder>
+  </a-entity>
+
+  <!-- ── STONE WALL — back ── -->
+  <a-box position=" 0    1.22 -10.6" width="22"   height="2.44" depth="0.48" color="#b0a48e" roughness="0.80"></a-box>
+  <a-box position=" 0    2.50 -10.6" width="22.2" height="0.22" depth="0.60" color="#c8bca6" roughness="0.70"></a-box>
+  <a-box position="-4.5  1.22 -10.35" width="0.038" height="2.44" depth="0.018" color="#8a7e6a" roughness="0.86"></a-box>
+  <a-box position=" 0.5  1.22 -10.35" width="0.038" height="2.44" depth="0.018" color="#8a7e6a" roughness="0.86"></a-box>
+  <a-box position=" 5.5  1.22 -10.35" width="0.038" height="2.44" depth="0.018" color="#8a7e6a" roughness="0.86"></a-box>
+  <a-box position=" 0    0.82 -10.35" width="22"   height="0.026" depth="0.018" color="#9a8e78" roughness="0.84"></a-box>
+  <a-box position=" 0    1.64 -10.35" width="22"   height="0.026" depth="0.018" color="#9a8e78" roughness="0.84"></a-box>
+  <a-box position=" 0    2.36 -10.35" width="22"   height="0.026" depth="0.018" color="#9a8e78" roughness="0.84"></a-box>
+  <!-- Creeping vine on wall -->
+  <a-sphere position="-5.5 1.82 -10.33" radius="0.27" scale="1.8 0.6 0.5" color="#2e6a18" roughness="0.68" opacity="0.88"></a-sphere>
+  <a-sphere position="-4.8 2.12 -10.33" radius="0.21" scale="1.5 0.6 0.5" color="#389020" roughness="0.68" opacity="0.85"></a-sphere>
+  <a-sphere position=" 3.0 1.68 -10.33" radius="0.24" scale="1.6 0.6 0.5" color="#308820" roughness="0.68" opacity="0.88"></a-sphere>
+  <!-- Side wall left -->
+  <a-box position="-10.6 1.10 -4.5" width="0.46" height="2.20" depth="12.0" color="#a89c88" roughness="0.80"></a-box>
+
+  <!-- ── GARDEN URNS (matching pair either side of patio) ── -->
+  <!-- URN LEFT -->
+  <a-entity position="-3.30 0 1.80">
+    <a-box position="0 0.046 0" width="0.52" height="0.092" depth="0.52" color="#c0b498" roughness="0.66"></a-box>
+    <a-cylinder position="0 0.245 0" radius="0.125" height="0.410" color="#ccc0a8" roughness="0.60" metalness="0.06"></a-cylinder>
+    <a-torus position="0 0.050 0" radius="0.142" radius-tubular="0.017" color="#b4a890" roughness="0.64"></a-torus>
+    <a-torus position="0 0.452 0" radius="0.142" radius-tubular="0.017" color="#b4a890" roughness="0.64"></a-torus>
+    <a-sphere position="0 0.748 0" radius="0.255" scale="1 1.18 1" color="#d0c8b0" roughness="0.48" metalness="0.08"></a-sphere>
+    <a-torus position=" 0.268 0.748 0" radius="0.086" radius-tubular="0.017" arc="200" rotation="0 0 -90" color="#c0b8a0" roughness="0.46"></a-torus>
+    <a-torus position="-0.268 0.748 0" radius="0.086" radius-tubular="0.017" arc="200" rotation="0 0  90" color="#c0b8a0" roughness="0.46"></a-torus>
+    <a-cylinder position="0 1.045 0" radius="0.114" height="0.150" color="#c8c0a8" roughness="0.48"></a-cylinder>
+    <a-torus position="0 1.122 0" radius="0.156" radius-tubular="0.030" color="#d0c8b0" roughness="0.44"></a-torus>
+    <a-sphere position="0 1.505 0" radius="0.298" scale="1 0.95 1" color="#2c7a1a" roughness="0.56"></a-sphere>
+    <a-sphere position="0.05 1.685 0.05" radius="0.155" scale="1 0.82 1" color="#3e9022" roughness="0.54" opacity="0.74"></a-sphere>
+    <a-sphere position=" 0.190 1.668  0.124" radius="0.042" color="#f02a5a" roughness="0.38"></a-sphere>
+    <a-sphere position="-0.145 1.694 -0.106" radius="0.036" color="#e82252" roughness="0.40"></a-sphere>
+    <a-sphere position=" 0.060 1.728  0.212" radius="0.033" color="#f03868" roughness="0.38"></a-sphere>
+  </a-entity>
+  <!-- URN RIGHT -->
+  <a-entity position="3.40 0 1.60">
+    <a-box position="0 0.046 0" width="0.52" height="0.092" depth="0.52" color="#c0b498" roughness="0.66"></a-box>
+    <a-cylinder position="0 0.245 0" radius="0.125" height="0.410" color="#ccc0a8" roughness="0.60" metalness="0.06"></a-cylinder>
+    <a-torus position="0 0.050 0" radius="0.142" radius-tubular="0.017" color="#b4a890" roughness="0.64"></a-torus>
+    <a-torus position="0 0.452 0" radius="0.142" radius-tubular="0.017" color="#b4a890" roughness="0.64"></a-torus>
+    <a-sphere position="0 0.748 0" radius="0.255" scale="1 1.18 1" color="#d0c8b0" roughness="0.48" metalness="0.08"></a-sphere>
+    <a-torus position=" 0.268 0.748 0" radius="0.086" radius-tubular="0.017" arc="200" rotation="0 0 -90" color="#c0b8a0" roughness="0.46"></a-torus>
+    <a-torus position="-0.268 0.748 0" radius="0.086" radius-tubular="0.017" arc="200" rotation="0 0  90" color="#c0b8a0" roughness="0.46"></a-torus>
+    <a-cylinder position="0 1.045 0" radius="0.114" height="0.150" color="#c8c0a8" roughness="0.48"></a-cylinder>
+    <a-torus position="0 1.122 0" radius="0.156" radius-tubular="0.030" color="#d0c8b0" roughness="0.44"></a-torus>
+    <!-- Cone topiary (different from left) -->
+    <a-cone position="0 1.580 0" radius-bottom="0.285" radius-top="0.036" height="0.680" color="#2e7c1c" roughness="0.56" cast-shadow="true"></a-cone>
+    <a-sphere position="0 1.962 0" radius="0.106" color="#389022" roughness="0.54"></a-sphere>
+    <a-sphere position=" 0.158 1.762  0.105" radius="0.034" color="#f8c020" roughness="0.38"></a-sphere>
+    <a-sphere position="-0.124 1.802 -0.090" radius="0.030" color="#f0b818" roughness="0.40"></a-sphere>
+    <a-sphere position=" 0.048 1.842  0.168" radius="0.028" color="#f8c820" roughness="0.38"></a-sphere>
+  </a-entity>
+
+  <!-- ── STEPPING STONE PATH ── -->
+  <a-sphere position=" 0.00 0.017  3.60" radius="0.365" scale="1.55 0.056 1.18" color="#c0b498" roughness="0.82"></a-sphere>
+  <a-sphere position=" 0.26 0.017  4.60" radius="0.330" scale="1.48 0.054 1.12" color="#c8bca2" roughness="0.82"></a-sphere>
+  <a-sphere position="-0.16 0.017  5.65" radius="0.348" scale="1.52 0.055 1.16" color="#b8ac92" roughness="0.82"></a-sphere>
+  <a-sphere position=" 0.38 0.017  6.65" radius="0.315" scale="1.44 0.053 1.10" color="#c0b498" roughness="0.82"></a-sphere>
+  <a-sphere position="-0.08 0.017  7.65" radius="0.340" scale="1.50 0.054 1.14" color="#c8bca2" roughness="0.82"></a-sphere>
+  <a-sphere position=" 0.48 0.017  8.65" radius="0.322" scale="1.46 0.054 1.10" color="#b8ac92" roughness="0.82"></a-sphere>
+
+  <!-- ── BUTTERFLIES ── -->
+  <a-entity position="-3.5 1.14 -0.6"
+    animation="property: position; from: -3.5 1.14 -0.6; to: -3.0 1.44 -0.2; dir: alternate; dur: 3400; easing: easeInOutSine; loop: true">
+    <a-sphere position=" 0.088 0.014 0" radius="0.066" scale="0.64 0.84 0.12" color="#e87c18" roughness="0.26" opacity="0.87"></a-sphere>
+    <a-sphere position="-0.088 0.014 0" radius="0.066" scale="0.64 0.84 0.12" color="#e87c18" roughness="0.26" opacity="0.87"></a-sphere>
+    <a-sphere position=" 0.070 -0.048 0" radius="0.047" scale="0.54 0.58 0.12" color="#f09030" roughness="0.26" opacity="0.77"></a-sphere>
+    <a-sphere position="-0.070 -0.048 0" radius="0.047" scale="0.54 0.58 0.12" color="#f09030" roughness="0.26" opacity="0.77"></a-sphere>
+    <a-sphere position=" 0.086 0.018 0" radius="0.013" scale="1 1 0.5" color="#1a1410" roughness="0.28" opacity="0.63"></a-sphere>
+    <a-sphere position="-0.086 0.018 0" radius="0.013" scale="1 1 0.5" color="#1a1410" roughness="0.28" opacity="0.63"></a-sphere>
+    <a-cylinder position="0 0 0" radius="0.0105" height="0.138" color="#1a1410" roughness="0.58"></a-cylinder>
+    <a-cylinder position=" 0.011 0.074 0" radius="0.0030" height="0.076" rotation="0 0 -15" color="#1a1410" roughness="0.66"></a-cylinder>
+    <a-cylinder position="-0.011 0.074 0" radius="0.0030" height="0.076" rotation="0 0  15" color="#1a1410" roughness="0.66"></a-cylinder>
+    <a-sphere position=" 0.024 0.115 0" radius="0.0075" color="#e04038" roughness="0.36"></a-sphere>
+    <a-sphere position="-0.024 0.115 0" radius="0.0075" color="#e04038" roughness="0.36"></a-sphere>
+  </a-entity>
+
+  <a-entity position="3.2 0.94 -0.4"
+    animation="property: position; from: 3.2 0.94 -0.4; to: 3.8 1.28 0.2; dir: alternate; dur: 4200; easing: easeInOutSine; loop: true; delay: 1200">
+    <a-sphere position=" 0.080 0.013 0" radius="0.058" scale="0.62 0.80 0.12" color="#5060d8" roughness="0.26" opacity="0.84"></a-sphere>
+    <a-sphere position="-0.080 0.013 0" radius="0.058" scale="0.62 0.80 0.12" color="#5060d8" roughness="0.26" opacity="0.84"></a-sphere>
+    <a-sphere position=" 0.066 -0.043 0" radius="0.042" scale="0.52 0.54 0.12" color="#6878e8" roughness="0.26" opacity="0.75"></a-sphere>
+    <a-sphere position="-0.066 -0.043 0" radius="0.042" scale="0.52 0.54 0.12" color="#6878e8" roughness="0.26" opacity="0.75"></a-sphere>
+    <a-sphere position=" 0.078 0.016 0" radius="0.011" scale="1 1 0.5" color="#f8f4e8" roughness="0.24" opacity="0.58"></a-sphere>
+    <a-sphere position="-0.078 0.016 0" radius="0.011" scale="1 1 0.5" color="#f8f4e8" roughness="0.24" opacity="0.58"></a-sphere>
+    <a-cylinder position="0 0 0" radius="0.0095" height="0.128" color="#1a1410" roughness="0.58"></a-cylinder>
+    <a-cylinder position=" 0.010 0.068 0" radius="0.0027" height="0.068" rotation="0 0 -14" color="#1a1410" roughness="0.66"></a-cylinder>
+    <a-cylinder position="-0.010 0.068 0" radius="0.0027" height="0.068" rotation="0 0  14" color="#1a1410" roughness="0.66"></a-cylinder>
+    <a-sphere position=" 0.021 0.105 0" radius="0.007" color="#f0c040" roughness="0.36"></a-sphere>
+    <a-sphere position="-0.021 0.105 0" radius="0.007" color="#f0c040" roughness="0.36"></a-sphere>
+  </a-entity>
+
+  <!-- ── BIRDS ── -->
+  <!-- On wall -->
+  <a-entity position="-3.5 2.64 -10.22">
+    <a-sphere position="0 0 0" radius="0.056" scale="1.44 1.0 1.0" color="#48382a" roughness="0.56"></a-sphere>
+    <a-sphere position="0.063 0.015 0" radius="0.033" color="#5a4838" roughness="0.56"></a-sphere>
+    <a-cone position="0.099 0.009 0" radius-bottom="0.010" radius-top="0.003" height="0.042" rotation="0 0 -90" color="#e8c050" roughness="0.36"></a-cone>
+    <a-sphere position=" 0.008 -0.016 0.040" radius="0.024" scale="2.0 0.28 0.54" color="#48382a" roughness="0.56"></a-sphere>
+    <a-sphere position=" 0.008 -0.016 -0.040" radius="0.024" scale="2.0 0.28 0.54" color="#6a5848" roughness="0.56"></a-sphere>
+  </a-entity>
+  <!-- On oak branch -->
+  <a-entity position="-7.2 6.9 -8.5">
+    <a-sphere position="0 0 0" radius="0.050" scale="1.38 1.0 1.0" color="#38281a" roughness="0.56"></a-sphere>
+    <a-sphere position="0.056 0.013 0" radius="0.029" color="#4a3828" roughness="0.56"></a-sphere>
+    <a-cone position="0.088 0.008 0" radius-bottom="0.009" radius-top="0.003" height="0.036" rotation="0 0 -90" color="#e0b840" roughness="0.36"></a-cone>
+  </a-entity>
+  <!-- On ground near flowers -->
+  <a-entity position="-3.8 0.14 0.0">
+    <a-sphere position="0 0 0" radius="0.046" scale="1.33 1.0 1.0" color="#503c2c" roughness="0.60"></a-sphere>
+    <a-sphere position="0.052 0.011 0" radius="0.027" color="#604c3c" roughness="0.60"></a-sphere>
+    <a-cone position="0.082 0.006 0" radius-bottom="0.009" radius-top="0.003" height="0.034" rotation="0 0 -90" color="#e8c848" roughness="0.36"></a-cone>
+    <a-cylinder position="-0.007 -0.052 0.011" radius="0.003" height="0.038" rotation="-10 0  5" color="#e8c848" roughness="0.48"></a-cylinder>
+    <a-cylinder position=" 0.007 -0.052 -0.011" radius="0.003" height="0.038" rotation=" 10 0 -5" color="#e8c848" roughness="0.48"></a-cylinder>
+  </a-entity>
+
+  <!-- ── FALLING LEAVES (animated) ── -->
+  <a-sphere position="-2.2 3.60 -1.8" radius="0.046" scale="1.85 0.27 1.04" color="#e8a520" roughness="0.50"
+    animation="property: position; from: -2.2 3.60 -1.8; to: -1.3 0.12 -0.8; dur: 9200; easing: easeInQuad; loop: true"
+    animation__r="property: rotation; from: 0 0 0; to: 390 225 112; dur: 9200; easing: linear; loop: true">
+  </a-sphere>
+  <a-sphere position="1.8 4.30 -2.5" radius="0.040" scale="1.68 0.24 0.94" color="#cc8c18" roughness="0.50"
+    animation="property: position; from: 1.8 4.30 -2.5; to: 2.8 0.12 -1.2; dur: 12200; easing: easeInQuad; loop: true; delay: 3600"
+    animation__r="property: rotation; from: 0 0 0; to: 285 405 182; dur: 12200; easing: linear; loop: true; delay: 3600">
+  </a-sphere>
+  <a-sphere position="-0.8 5.1 -3.0" radius="0.036" scale="1.58 0.22 0.88" color="#b87010" roughness="0.50"
+    animation="property: position; from: -0.8 5.1 -3.0; to: 0.2 0.12 -1.5; dur: 10700; easing: easeInQuad; loop: true; delay: 6600"
+    animation__r="property: rotation; from: 0 0 0; to: 325 164 244; dur: 10700; easing: linear; loop: true; delay: 6600">
+  </a-sphere>
+
+  <!-- ── GRASS TUFTS ── -->
+  <a-entity position=" 4.0 0 3.0">
+    <a-cylinder position=" 0.000 0.115 0.000" radius="0.017" height="0.215" rotation=" 8 0  0" color="#5ab040" roughness="0.68"></a-cylinder>
+    <a-cylinder position=" 0.036 0.102 0.026" radius="0.013" height="0.182" rotation="-5 0  9" color="#4ea032" roughness="0.68"></a-cylinder>
+    <a-cylinder position="-0.030 0.108 -0.020" radius="0.014" height="0.195" rotation=" 5 0 -7" color="#62b244" roughness="0.68"></a-cylinder>
+  </a-entity>
+  <a-entity position="-3.9 0 2.8">
+    <a-cylinder position=" 0.000 0.110 0.000" radius="0.016" height="0.205" rotation="-6 0  0" color="#5ab040" roughness="0.68"></a-cylinder>
+    <a-cylinder position=" 0.030 0.096 0.022" radius="0.012" height="0.175" rotation=" 4 0  7" color="#4ea032" roughness="0.68"></a-cylinder>
+    <a-cylinder position="-0.028 0.104 -0.018" radius="0.013" height="0.188" rotation=" 3 0 -6" color="#62b244" roughness="0.68"></a-cylinder>
+  </a-entity>
+
+  <!-- ── DISTANT HILLS ── -->
+  <a-sphere position="-22  5.5 -52" radius="14" scale="2.2 1 1.5" color="#9ec8b8" roughness="1" opacity="0.58"></a-sphere>
+  <a-sphere position="  5  4.0 -54" radius="12" scale="2.5 1 1.5" color="#a8d0be" roughness="1" opacity="0.50"></a-sphere>
+  <a-sphere position=" 24  6.0 -50" radius="13" scale="2.0 1 1.4" color="#98c0b0" roughness="1" opacity="0.55"></a-sphere>
+  <a-sphere position=" -8  3.5 -56" radius="10" scale="2.8 1 1.6" color="#b0d8c4" roughness="1" opacity="0.42"></a-sphere>
+
+  <!-- ── FAR BACKGROUND TREE SILHOUETTES ── -->
+  <a-cylinder position="-14 2.5 -13" radius="0.17" height="5.0" color="#3c6820" roughness="0.84" opacity="0.68"></a-cylinder>
+  <a-sphere   position="-14 6.2 -13" radius="1.75" scale="1 0.88 1" color="#2e6018" roughness="0.70" opacity="0.65"></a-sphere>
+  <a-cylinder position=" 12 2.2 -14" radius="0.15" height="4.4" color="#3a6420" roughness="0.84" opacity="0.62"></a-cylinder>
+  <a-sphere   position=" 12 5.8 -14" radius="1.55" scale="1 0.90 1" color="#306018" roughness="0.70" opacity="0.58"></a-sphere>
+  <a-cylinder position="-18 1.8 -16" radius="0.13" height="3.6" color="#387018" roughness="0.84" opacity="0.52"></a-cylinder>
+  <a-sphere   position="-18 4.6 -16" radius="1.35" scale="1 0.88 1" color="#2a5c18" roughness="0.70" opacity="0.48"></a-sphere>
+
+</a-scene>
+</body>
+</html>
